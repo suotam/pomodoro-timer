@@ -1,16 +1,33 @@
-package org.example
+import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import androidx.compose.ui.window.rememberWindowState
+import data.Database
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import notification.NotificationService
+import timer.TimerController
+import ui.App
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-fun main() {
-    val name = "Kotlin"
-    //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-    // to see how IntelliJ IDEA suggests fixing it.
-    println("Hello, " + name + "!")
+fun main() = application {
+    Database.initialize()
+    NotificationService.initialize()
 
-    for (i in 1..5) {
-        //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-        // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        println("i = $i")
+    val timerScope = CoroutineScope(Dispatchers.Default)
+    val timerController = TimerController(timerScope)
+
+    val windowState = rememberWindowState(size = DpSize(1000.dp, 680.dp))
+
+    Window(
+        onCloseRequest = {
+            timerController.stop()
+            NotificationService.dispose()
+            exitApplication()
+        },
+        title = "FocusFlow ",
+        state = windowState
+    ) {
+        App(timerController)
     }
 }
