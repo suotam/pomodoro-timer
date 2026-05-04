@@ -10,19 +10,27 @@ object CsvExporter {
 
         sb.appendLine("Datum,Projekt,Task,Typ,Trvání,Trvání (sec)")
 
-        for (row in rows) {
-            val type = if (row.type == "work") "Práce" else "Pauza"
-            val duration = formatDuration(row.durationSeconds)
-            sb.appendLine(
-                listOf(
-                    row.date,
-                    "\"${row.projectName}\"",
-                    "\"${row.taskName}\"",
-                    type,
-                    duration,
-                    row.durationSeconds.toString()
-                ).joinToString(",")
-            )
+        val taskGroups = rows.groupBy { it.projectName to it.taskName }
+
+        taskGroups.forEach { (_, taskRows) ->
+            for (row in taskRows) {
+                val type = if (row.type == "work") "Práce" else "Pauza"
+                val duration = formatDuration(row.durationSeconds)
+                sb.appendLine(
+                    listOf(
+                        row.date,
+                        "\"${row.projectName}\"",
+                        "\"${row.taskName}\"",
+                        type,
+                        duration,
+                        row.durationSeconds.toString()
+                    ).joinToString(",")
+                )
+            }
+
+            val taskWork = taskRows.filter { it.type == "work" }.sumOf { it.durationSeconds }
+            val taskName = taskRows.first().taskName
+            sb.appendLine("\"Součet (práce)\",\"\",\"$taskName\",,${formatDuration(taskWork)},$taskWork")
         }
 
         if (rows.isNotEmpty()) {
